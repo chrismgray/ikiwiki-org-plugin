@@ -1,0 +1,43 @@
+
+* Ikiwiki Org Plugin
+
+  This is intended to be a plugin for the [[http://ikiwiki.info][ikiwiki]] wiki compiler that
+  interprets [[http://orgmode.org][org-mode]] files.
+
+  It is currently unwritten, and the [[http://ikiwiki.info/todo/org_mode/][existing org-mode plugin]] for
+  ikiwiki should be used instead.
+  
+* Motivation
+
+  Why a rewrite of the plugin?
+  
+** Speed
+
+   The current org-mode plugin is very slow.  It starts a new emacs
+   process for every file that is interpreted.  The emacs startup time
+   dominates the time for interpreting the file for all but the
+   largest files.
+   
+** Flexibility
+
+   The current org-mode plugin doesn't interpret common org-mode
+   directives like =#+TITLE= or =#+AUTHOR=.  These are not hard to
+   parse out of the files with Perl, but the better solution is to
+   allow org-mode itself to parse the files, and get the information
+   from org-mode's internal structures.
+   
+* Installation
+
+  There are two main files: =sh/new-org= and
+  =lisp/ikiwiki-org-plugin.el=.  The first needs to go in the
+  =~/.ikiwiki/plugins= directory and the second needs to go somewhere
+  in the emacs =load-path=.
+
+  The plugin must be enabled in your =wiki.setup= or =blog.setup=
+  file.  This is done by adding =new-org= to the =add_plugins= list.
+  
+* License
+
+  Copyright (C) 2011, Chris Gray.
+
+  Distributed under the GPL, version 2 or (at your discretion) higher.

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+file=$(tempfile)
+emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$file\")"
+while read line; do
+    echo $line >> $file
+done
+
