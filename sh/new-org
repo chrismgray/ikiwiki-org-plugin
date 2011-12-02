@@ -1,8 +1,8 @@
 #!/bin/bash
 
 file=$(tempfile)
-emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$file\")"
+emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$file\")" -a "emacs --daemon --eval \"(progn (setq server-name \\"org-ikiwiki-compiler\\") (server-start) (org-ikiwiki-compile \\"$file\\"))\""
 while read line; do
     echo $line >> $file
 done
-
+rm $file
