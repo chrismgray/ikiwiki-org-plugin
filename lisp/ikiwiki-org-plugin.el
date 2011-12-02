@@ -63,14 +63,21 @@ called with the result as parameter."
   (let* ((content (gethash "content" params))
 	 (page (gethash "page" params))
 	 (org-export-html-preamble nil)
-	 (org-export-html-postable nil)
+	 (org-export-html-postamble nil)
+	 (org-export-with-sub-superscripts nil)
+	 (org-export-with-TeX-macros nil) ; let mathjax take care of it
+	 (org-export-with-LaTeX-fragments 'mathjax)
 	 (org-export-with-toc nil)
-	 (ret-html
+	 (org-info
 	  (with-temp-buffer
 	    (insert content)
 	    (org-mode)
-	    (org-replace-region-by-html (point-min) (point-max))
-	    (buffer-substring-no-properties (point-min) (point-max)))))
+	    (list (org-infile-export-plist)
+		  (org-export-as-html 3 t nil 'string t))))
+	 (ret-html (cadr org-info))
+	 (title (plist-get (car org-info) :title)))
+    (org-ikiwiki-setstate page "meta" "title" title)
+    (funcall get-response-fn)
     ret-html))
 
 (defvar org-ikiwiki-methods 
