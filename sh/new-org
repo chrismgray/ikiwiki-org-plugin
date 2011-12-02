@@ -1,8 +1,26 @@
 #!/bin/bash
 
-file=$(tempfile)
-emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$file\")" -a "emacs --daemon --eval \"(progn (setq server-name \\"org-ikiwiki-compiler\\") (server-start) (org-ikiwiki-compile \\"$file\\"))\""
-while read line; do
-    echo $line >> $file
+inputfile=$(tempfile)
+outputfile=$(tempfile)
+
+watch() {
+    tail -f $outputfile
+    # while [ -e $outputfile ]; do
+    # 	output=`cat $outputfile`
+    # 	if [ ! -z "$output" ]; then
+    # 	    cat $outputfile
+    # 	    echo -n > $outputfile
+    # 	fi
+    # done
+}
+
+watch &
+IFS=
+emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$inputfile\" \"$outputfile\")" -a "emacs --daemon --eval \"(progn (setq server-name \\"org-ikiwiki-compiler\\") (server-start) (org-ikiwiki-compile \\"$inputfile\\" \\"$outputfile\\"))\"" &
+while read -r line; do
+    echo -E "$line" >> $inputfile
+    echo -E "$line" > /dev/stderr
 done
-rm $file
+
+rm $inputfile
+rm $outputfile
