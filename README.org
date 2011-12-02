@@ -4,8 +4,8 @@
   This is intended to be a plugin for the [[http://ikiwiki.info][ikiwiki]] wiki compiler that
   interprets [[http://orgmode.org][org-mode]] files.
 
-  It is currently unwritten, and the [[http://ikiwiki.info/todo/org_mode/][existing org-mode plugin]] for
-  ikiwiki should be used instead.
+  It is currently in a very alpha state, and the [[http://ikiwiki.info/todo/org_mode/][existing org-mode
+  plugin]] for ikiwiki should probably be used instead.
   
 * Motivation
 
