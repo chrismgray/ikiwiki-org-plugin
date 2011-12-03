@@ -4,7 +4,7 @@ inputfile=$(tempfile)
 outputfile=$(tempfile)
 
 watch() {
-    tail -f $outputfile
+    tail --follow=name $outputfile
 }
 
 watch &
