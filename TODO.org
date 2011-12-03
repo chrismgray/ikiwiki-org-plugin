@@ -1,0 +1,9 @@
+
+* Ikiwiki plugin
+** sh
+*** TODO Figure out why files are not being properly cleaned up
+**** Is it because ikiwiki is not cleaning up stdout when exiting?
+      
+** lisp
+*** TODO Use less CPU when waiting on a file
+**** Possibly sleep for a short amount of time.
