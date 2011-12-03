@@ -24,9 +24,6 @@
 	(throw 'org-ikiwiki-input-file-gone nil)))))
 
 (defun xml-rpc-method-call-stdout (method &rest params)
-  "Call an XML-RPC method asynchronously at SERVER-URL named METHOD with \
-PARAMS as parameters. When the method returns, ASYNC-CALLBACK-FUNC will be \
-called with the result as parameter."
   (let* ((m-name (if (stringp method)
                      method
                    (symbol-name method)))
