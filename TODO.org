@@ -7,3 +7,4 @@
 ** lisp
 *** TODO Use less CPU when waiting on a file
 **** Possibly sleep for a short amount of time.
+*** TODO Figure out why it doesn't work from a daemonized emacs

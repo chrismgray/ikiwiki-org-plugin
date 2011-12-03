@@ -35,6 +35,12 @@
 
   The plugin must be enabled in your =wiki.setup= or =blog.setup=
   file.  This is done by adding =new-org= to the =add_plugins= list.
+
+  Right now, the best chance of things working is if you start a new
+  emacs instance and set the =server-name= to =org-ikiwiki-compiler=
+  and then run =M-x start-server=.  Setting the =server-name= in your
+  primary emacs instance will cause it to hang every time that ikiwiki
+  recompiles your wiki.
   
 * License
 
