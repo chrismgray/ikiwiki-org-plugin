@@ -19,8 +19,7 @@
     (while (not (re-search-forward "</\\(methodResponse\\|methodCall\\)>" (point-max) t))
       (revert-buffer t t)
       (narrow-to-region org-ikiwiki-region-start (point-max))
-      (when (not (file-exists-p (buffer-file-name buffer)))
-	(signal 'file-is-gone '())))))
+      (sleep-for 0.3))))
 
 (defun xml-rpc-method-call-stdout (method &rest params)
   "Call an XML-RPC method asynchronously at SERVER-URL named METHOD with \
@@ -126,40 +125,38 @@ called with the result as parameter."
 	 (auto-revert-mode nil))
     (setq org-ikiwiki-output-file output-file)
     (org-ikiwiki-with-no-supersession-questions
-     (condition-case nil
-      (while (file-exists-p input-file)
-	(xml-rpc-wait-for-response input-buffer)
-	(let* ((xml-rpc-debug 3)
-	       (xml-list
-		(with-current-buffer input-buffer
-		  (xml-rpc-clean (xml-parse-region (point-min) (point-max)))))
-	       (method-or-response (car-safe (car-safe xml-list))))
-	  (with-current-buffer input-buffer
-	    (revert-buffer t t)
-	    (setq org-ikiwiki-region-start (point-max))
-	    (narrow-to-region (point-max) (point-max)))
-	  (cond
-	   ((eq method-or-response 'methodResponse)
-	    (let ((valpart (cdr (cdaddr (caddar xml-list)))))
-	      (xml-rpc-xml-list-to-value valpart)))
-	   ((eq method-or-response 'methodCall)
-	    (let* ((method-name (caddr (caddar xml-list)))
-		   (params (mapcar
-			    (lambda (node)
-			      (xml-rpc-xml-list-to-value
-			       (list node)))
-			    (xml-find-nodes-matching (car xml-list) 'value)))
-		   (method (cadr (assoc method-name methods)))
-		   (result (funcall method org-ikiwiki-rpc-xml-get-response (list->hash params)))
-		   (m-params (list `(param nil ,(car (xml-rpc-value-to-xml-list result)))))
-		   (m-response `((methodResponse nil
-						 ,(append '(params nil) m-params)))))
-	      (with-temp-buffer 
-		(xml-print-with-preamble m-response)
-		(append-to-file (point-min) (point-max) org-ikiwiki-output-file))))
-	   (t
-	    (error "Not a methodCall or methodResponse")))))
-      (file-is-gone nil)))
+     (while (file-exists-p input-file)
+       (xml-rpc-wait-for-response input-buffer)
+       (let* ((xml-rpc-debug 3)
+	      (xml-list
+	       (with-current-buffer input-buffer
+		 (xml-rpc-clean (xml-parse-region (point-min) (point-max)))))
+	      (method-or-response (car-safe (car-safe xml-list))))
+	 (with-current-buffer input-buffer
+	   (revert-buffer t t)
+	   (setq org-ikiwiki-region-start (point-max))
+	   (narrow-to-region (point-max) (point-max)))
+	 (cond
+	  ((eq method-or-response 'methodResponse)
+	   (let ((valpart (cdr (cdaddr (caddar xml-list)))))
+	     (xml-rpc-xml-list-to-value valpart)))
+	  ((eq method-or-response 'methodCall)
+	   (let* ((method-name (caddr (caddar xml-list)))
+		  (params (mapcar
+			   (lambda (node)
+			     (xml-rpc-xml-list-to-value
+			      (list node)))
+			   (xml-find-nodes-matching (car xml-list) 'value)))
+		  (method (cadr (assoc method-name methods)))
+		  (result (funcall method org-ikiwiki-rpc-xml-get-response (list->hash params)))
+		  (m-params (list `(param nil ,(car (xml-rpc-value-to-xml-list result)))))
+		  (m-response `((methodResponse nil
+						,(append '(params nil) m-params)))))
+	     (with-temp-buffer 
+	       (xml-print-with-preamble m-response)
+	       (append-to-file (point-min) (point-max) org-ikiwiki-output-file))))
+	  (t
+	   (error "Not a methodCall or methodResponse"))))))
     (message "done with that file!")))
 
 (provide 'ikiwiki-org-plugin)
