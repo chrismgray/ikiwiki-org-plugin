@@ -69,6 +69,7 @@ called with the result as parameter."
 	 (org-export-with-sub-superscripts nil)
 	 (org-export-with-TeX-macros nil) ; let mathjax take care of it
 	 (org-export-with-LaTeX-fragments 'mathjax)
+	 (org-export-babel-evaluate nil)
 	 (org-export-with-toc nil)
 	 (org-info
 	  (with-temp-buffer
