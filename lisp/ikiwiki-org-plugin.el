@@ -42,7 +42,7 @@
 
 (defun org-ikiwiki-hook (&rest params)
   (apply 'xml-rpc-method-call-stdout 'hook (butlast params))
-  (funcall (last params)))
+  (funcall (car (last params))))
 
 (defun org-ikiwiki-setstate (page id key value get-response-fn)
   (xml-rpc-method-call-stdout 'setstate page id key value)
@@ -110,8 +110,7 @@
 		  (org-export-as-html 3 t nil 'string t))))
 	 (ret-html (cadr org-info))
 	 (title (plist-get (car org-info) :title)))
-    (org-ikiwiki-setstate page "meta" "title" title)
-    (funcall get-response-fn)
+    (org-ikiwiki-setstate page "meta" "title" title get-response-fn)
     ret-html))
 
 (defvar org-ikiwiki-methods 
