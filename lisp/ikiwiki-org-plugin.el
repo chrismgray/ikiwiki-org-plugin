@@ -40,17 +40,28 @@
       (append-to-file (point-min) (point-max) org-ikiwiki-output-file))))
 
 (defun org-ikiwiki-hook (&rest params)
-  (apply 'xml-rpc-method-call-stdout 'hook params))
+  (apply 'xml-rpc-method-call-stdout 'hook (butlast params))
+  (funcall (last params)))
 
-(defun org-ikiwiki-setstate (page id key value)
-  (xml-rpc-method-call-stdout 'setstate page id key value))
+(defun org-ikiwiki-setstate (page id key value get-response-fn)
+  (xml-rpc-method-call-stdout 'setstate page id key value)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-getvar (hash-name hash-key get-response-fn)
+  (xml-rpc-method-call-stdout 'getvar hash-name hash-key)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-add-link (page text get-response-fn &optional link-type)
+  (if link-type
+      (xml-rpc-method-call-stdout 'add_link page text link-type)
+    (xml-rpc-method-call-stdout 'add_link page text))
+  (funcall get-response-fn))
 
 (defun org-ikiwiki-import (get-response-fn params)
-  (org-ikiwiki-hook "type" "htmlize" "id" "org" "call" "htmlize")
-  (funcall get-response-fn)
-;  (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify")
-;  (org-ikiwiki-hook "type" "scan" "id" "org" "call" "scan")
-  "1"
+  (org-ikiwiki-hook "type" "htmlize" "id" "org" "call" "htmlize" get-response-fn)
+  (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify" get-response-fn)
+  (org-ikiwiki-hook "type" "scan" "id" "org" "call" "scan" get-response-fn)
+  1
   )
 
 (defun list->hash (l)
@@ -60,8 +71,28 @@
       (setq l (cddr l)))
     ret))
 
-(defun org-ikiwiki-htmlize (get-response-fn params)
-  (let* ((content (gethash "content" params))
+(defun org-ikiwiki-linkify (get-response-fn prms)
+  (let* ((params (list->hash prms))
+	 (content (gethash "content" params))
+	 (page (gethash "page" params))
+	 (destpage (gethash "destpage" params)))
+    content))
+
+(defun org-ikiwiki-scan (get-response-fn prms)
+  (let* ((params (list->hash prms))
+	 (page (gethash "page" params))
+	 (content (gethash "content" params))
+	 (page-file-name (org-ikiwiki-getstate "pagesources" page get-response-fn)))
+    (when (string-match "\\.org$" page-file-name)
+      (let* ((org-info
+	      (with-temp-buffer
+		(insert content)
+		(org-mode))))))
+    1))
+
+(defun org-ikiwiki-htmlize (get-response-fn prms)
+  (let* ((params (list->hash prms))
+	 (content (gethash "content" params))
 	 (page (gethash "page" params))
 	 (org-export-html-preamble nil)
 	 (org-export-html-postamble nil)
@@ -152,7 +183,7 @@
 			       (list node)))
 			    (xml-find-nodes-matching (car xml-list) 'value)))
 		   (method (cadr (assoc method-name methods)))
-		   (result (funcall method org-ikiwiki-rpc-xml-get-response (list->hash params)))
+		   (result (funcall method org-ikiwiki-rpc-xml-get-response params))
 		   (m-params (list `(param nil ,(car (xml-rpc-value-to-xml-list result)))))
 		   (m-response `((methodResponse nil
 						 ,(append '(params nil) m-params)))))
