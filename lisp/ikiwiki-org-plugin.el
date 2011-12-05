@@ -48,6 +48,10 @@
   (xml-rpc-method-call-stdout 'setstate page id key value)
   (funcall get-response-fn))
 
+(defun org-ikiwiki-getstate (page id key get-response-fn)
+  (xml-rpc-method-call-stdout 'getstate page id key)
+  (funcall get-response-fn))
+
 (defun org-ikiwiki-getvar (hash-name hash-key get-response-fn)
   (xml-rpc-method-call-stdout 'getvar hash-name hash-key)
   (funcall get-response-fn))
@@ -83,12 +87,15 @@
   (let* ((params (list->hash prms))
 	 (page (gethash "page" params))
 	 (content (gethash "content" params))
-	 (page-file-name (org-ikiwiki-getstate "pagesources" page get-response-fn)))
+	 (page-file-name (org-ikiwiki-getvar "pagesources" page get-response-fn)))
     (when (string-match "\\.org$" page-file-name)
-      (let* ((org-info
-	      (with-temp-buffer
-		(insert content)
-		(org-mode))))))
+      (with-temp-buffer
+	(insert content)
+	(org-mode)
+	(goto-char (point-min))
+	(while (re-search-forward org-any-link-re (point-max) t)
+	  (org-ikiwiki-add-link page (match-string 0) get-response-fn '(("org" . 1)))
+	  (goto-char (match-end 0)))))
     1))
 
 (defun org-ikiwiki-htmlize (get-response-fn prms)
