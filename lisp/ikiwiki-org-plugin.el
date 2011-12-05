@@ -16,12 +16,13 @@
 
 (defun xml-rpc-wait-for-response (buffer)
   (with-current-buffer buffer
-    (while (not (re-search-forward "</\\(methodResponse\\|methodCall\\)>" (point-max) t))
+    (while (not (re-search-forward "\\(</\\(methodResponse\\|methodCall\\)>\\)" (point-max) t))
       (revert-buffer t t)
       (narrow-to-region org-ikiwiki-region-start (point-max))
       (sleep-for 0.3)
       (when (not (file-exists-p (buffer-file-name)))
-	(throw 'org-ikiwiki-input-file-gone nil)))))
+	(throw 'org-ikiwiki-input-file-gone nil)))
+    (setq org-ikiwiki-region-end (match-end 0))))
 
 (defun xml-rpc-method-call-stdout (method &rest params)
   (let* ((m-name (if (stringp method)
@@ -90,6 +91,7 @@
 
 (defvar org-ikiwiki-output-file nil)
 (defvar org-ikiwiki-region-start 1)
+(defvar org-ikiwiki-region-end 1)
 
 (defun org-ikiwiki-make-rpc-xml-get-response-fn (input-buffer)
   (lambda ()
@@ -97,12 +99,12 @@
     (let* ((xml-rpc-debug 3)
 	   (xml-list
 	    (with-current-buffer input-buffer
-	     (xml-rpc-clean (xml-parse-region (point-min) (point-max)))))
+	     (xml-rpc-clean (xml-parse-region org-ikiwiki-region-start org-ikiwiki-region-end))))
 	   (method-or-response (car-safe (car-safe xml-list))))
       (with-current-buffer input-buffer
 	(revert-buffer t t)
-	(setq org-ikiwiki-region-start (point-max))
-	(narrow-to-region (point-max) (point-max)))
+	(setq org-ikiwiki-region-start org-ikiwiki-region-end)
+	(narrow-to-region org-ikiwiki-region-end org-ikiwiki-region-end))
       (if (eq method-or-response 'methodResponse)
 	  (let ((valpart (cdr (cdaddr (caddar xml-list)))))
 	    (xml-rpc-xml-list-to-value valpart))
@@ -118,6 +120,8 @@
 
 (defun org-ikiwiki-compile (input-file output-file)
   "Runs the ikiwiki compilation process."
+  (setq org-ikiwiki-region-start 1
+	org-ikiwiki-region-end 1)
   (let* ((input-buffer (find-file-noselect input-file t))
 	 (methods org-ikiwiki-methods)
 	 (org-ikiwiki-rpc-xml-get-response (org-ikiwiki-make-rpc-xml-get-response-fn input-buffer))
@@ -130,12 +134,12 @@
 	(let* ((xml-rpc-debug 3)
 	       (xml-list
 		(with-current-buffer input-buffer
-		  (xml-rpc-clean (xml-parse-region (point-min) (point-max)))))
+		  (xml-rpc-clean (xml-parse-region org-ikiwiki-region-start org-ikiwiki-region-end))))
 	       (method-or-response (car-safe (car-safe xml-list))))
 	  (with-current-buffer input-buffer
 	    (revert-buffer t t)
-	    (setq org-ikiwiki-region-start (point-max))
-	    (narrow-to-region (point-max) (point-max)))
+	    (setq org-ikiwiki-region-start org-ikiwiki-region-end)
+	    (narrow-to-region org-ikiwiki-region-end org-ikiwiki-region-end))
 	  (cond
 	   ((eq method-or-response 'methodResponse)
 	    (let ((valpart (cdr (cdaddr (caddar xml-list)))))
@@ -157,6 +161,8 @@
 		(append-to-file (point-min) (point-max) org-ikiwiki-output-file))))
 	   (t
 	    (error "Not a methodCall or methodResponse")))))))
+    (setq org-ikiwiki-region-start 1
+	  org-ikiwiki-region-end 1)
     (message "done with that file!")))
 
 (provide 'ikiwiki-org-plugin)
