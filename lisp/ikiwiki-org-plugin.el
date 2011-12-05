@@ -1,5 +1,6 @@
 
 (require 'xml-rpc)
+(require 'org-exp)
 
 (defun xml-find-nodes-matching (node name)
   "Returns all children of `node' that have an `xml-node-name' equal to `name'."
