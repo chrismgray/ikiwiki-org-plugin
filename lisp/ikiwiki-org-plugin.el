@@ -62,6 +62,14 @@
     (xml-rpc-method-call-stdout 'add_link page text))
   (funcall get-response-fn))
 
+(defun org-ikiwiki-pagename (file get-response-fn)
+  (xml-rpc-method-call-stdout 'pagename file)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-bestlink (page link-text get-response-fn)
+  (xml-rpc-method-call-stdout 'bestlink page link-text)
+  (funcall get-response-fn))
+
 (defun org-ikiwiki-import (get-response-fn params)
   (org-ikiwiki-hook "type" "htmlize" "id" "org" "call" "htmlize" get-response-fn)
   (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify" "first" t get-response-fn)
@@ -80,8 +88,27 @@
   (let* ((params (list->hash prms))
 	 (content (gethash "content" params))
 	 (page (gethash "page" params))
-	 (destpage (gethash "destpage" params)))
-    content))
+	 (destpage (gethash "destpage" params))
+	 (page-file-name (org-ikiwiki-getvar "pagesources" page get-response-fn))
+	 (ret (if (not (string-match "\\.org$" page-file-name))
+		  content
+		(with-temp-buffer
+		  (insert content)
+		  (goto-char (point-min))
+		  (while (re-search-forward org-bracket-link-regexp (point-max) t)
+		    (let* ((url-part (match-string-no-properties 1))
+		  	   (text-part (match-string-no-properties 3))
+			   (whole-link (match-string-no-properties 0))
+		  	   (best-link (save-match-data (org-ikiwiki-bestlink page url-part get-response-fn))))
+		      (if best-link
+		  	  ;; internal page
+		  	  (replace-match (concat "[[./" best-link "][" (or text-part url-part) "]]") t t)
+		  	;; external page -- put a slash in front if no text part
+		  	;; otherwise, leave the same
+		  	(when (not text-part)
+		  	  (replace-match (concat "\\[[" url-part "]]") t t)))))
+		  (buffer-string)))))
+    ret))
 
 (defun org-ikiwiki-scan (get-response-fn prms)
   (let* ((params (list->hash prms))
