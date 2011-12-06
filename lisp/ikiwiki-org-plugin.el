@@ -84,6 +84,46 @@
       (setq l (cddr l)))
     ret))
 
+(defun org-ikiwiki-correct-link (best-link destpage)
+  ;; best-link is always the same -- something like "posts/processing"
+  ;; destpage can change depending on whether the page is being
+  ;; inlined.  It might be something like "index" or "posts/test".  If
+  ;; it's the former, then we need to keep "posts/processing", but if
+  ;; it's the latter, then it needs to be "../processing".  So the
+  ;; strategy is to find the directories in destpage that are prefixes
+  ;; of best-link.  These can be removed from both
+  ;; (non-destructively).  The path that is returned is a number of
+  ;; ".."s that is the number of directories that is different between
+  ;; the new destpage and best-link followed by the new best-link.  So
+  ;; if we had best-link = "foo/bar/baz" and destpage =
+  ;; "foo/bar/quux/test" then we would reset best-link to "baz" and
+  ;; destpage to "quux/test".  We would return "../../baz".
+  (if (string= destpage "index")
+      best-link
+   (let* ((subdirs-match-index 0)
+	  (best-link (concat "/" (replace-regexp-in-string "//" "/" best-link)))
+	  (destpage (concat "/"  (replace-regexp-in-string "//" "/" destpage)))
+	  (best-link-len (length best-link))
+	  (destpage-len (length destpage))
+	  (matching-subdirs-index 0)
+	  (matching-subdirs-index
+	   (progn
+	     (while (and subdirs-match-index (< subdirs-match-index best-link-len) (< subdirs-match-index destpage-len)
+			 (string= (substring best-link 0 subdirs-match-index) (substring destpage 0 subdirs-match-index)))
+	       (setq matching-subdirs-index subdirs-match-index)
+	       (message (int-to-string matching-subdirs-index))
+	       (setq subdirs-match-index (string-match "/" destpage (1+ subdirs-match-index))))
+	     matching-subdirs-index))
+	  (link-prefix "")
+	  (subdirs-match-index matching-subdirs-index)
+	  (link-prefix
+	   (progn
+	     (while (and subdirs-match-index (< subdirs-match-index destpage-len))
+	       (setq subdirs-match-index (string-match "/" destpage (1+ subdirs-match-index)))
+	       (setq link-prefix (concat "../" link-prefix)))
+	     link-prefix)))
+     (concat link-prefix (substring best-link (1+ matching-subdirs-index))))))
+
 (defun org-ikiwiki-linkify (get-response-fn prms)
   (let* ((params (list->hash prms))
 	 (content (gethash "content" params))
@@ -98,11 +138,11 @@
 		  (while (re-search-forward org-bracket-link-regexp (point-max) t)
 		    (let* ((url-part (match-string-no-properties 1))
 		  	   (text-part (match-string-no-properties 3))
-			   (whole-link (match-string-no-properties 0))
 		  	   (best-link (save-match-data (org-ikiwiki-bestlink page url-part get-response-fn))))
 		      (if best-link
 		  	  ;; internal page
-		  	  (replace-match (concat "[[./" best-link "][" (or text-part url-part) "]]") t t)
+		  	  (replace-match (concat "[[./" (save-match-data
+							  (org-ikiwiki-correct-link best-link destpage)) "][" (or text-part url-part) "]]") t t)
 		  	;; external page -- put a slash in front if no text part
 		  	;; otherwise, leave the same
 		  	(when (not text-part)
