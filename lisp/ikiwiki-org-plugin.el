@@ -64,7 +64,7 @@
 
 (defun org-ikiwiki-import (get-response-fn params)
   (org-ikiwiki-hook "type" "htmlize" "id" "org" "call" "htmlize" get-response-fn)
-  (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify" get-response-fn)
+  (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify" "first" t get-response-fn)
   (org-ikiwiki-hook "type" "scan" "id" "org" "call" "scan" get-response-fn)
   1
   )
