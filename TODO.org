@@ -27,3 +27,4 @@
     CLOCK: [2011-12-03 Sat 08:52]--[2011-12-03 Sat 09:50] =>  0:58
     :END:
 *** TODO Allow proper customization
+*** TODO Test pictures hosted locally
