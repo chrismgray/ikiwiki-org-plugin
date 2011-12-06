@@ -1,12 +1,29 @@
 
 * Ikiwiki plugin
 ** sh
-*** TODO Figure out why files are not being properly cleaned up
+*** DONE Figure out why files are not being properly cleaned up
+    CLOSED: [2011-12-06 Tue 09:48]
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2011-12-06 Tue 09:48]
+    :END:
 **** Is it because ikiwiki is not cleaning up stdout when exiting?
       
 ** lisp
-*** TODO Use less CPU when waiting on a file
+*** DONE Use less CPU when waiting on a file
+    CLOSED: [2011-12-03 Sat 08:52]
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2011-12-03 Sat 08:52]
+    :END:
 **** Possibly sleep for a short amount of time.
 *** TODO Figure out why it doesn't work from a daemonized emacs
-*** TODO Write scan and linkify procedures
+*** DONE Write scan and linkify procedures
+    CLOSED: [2011-12-06 Tue 14:38]
+    :LOGBOOK:
+    - State "DONE"       from "STARTED"    [2011-12-06 Tue 14:38]
+    CLOCK: [2011-12-06 Tue 14:33]--[2011-12-06 Tue 14:38] =>  0:05
+    CLOCK: [2011-12-06 Tue 09:48]--[2011-12-06 Tue 10:26] =>  0:38
+    CLOCK: [2011-12-03 Sat 18:21]--[2011-12-03 Sat 20:13] =>  1:52
+    - State "STARTED"    from "TODO"       [2011-12-03 Sat 08:52]
+    CLOCK: [2011-12-03 Sat 08:52]--[2011-12-03 Sat 09:50] =>  0:58
+    :END:
 *** TODO Allow proper customization

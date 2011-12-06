@@ -1,5 +1,6 @@
 
 (require 'xml-rpc)
+(require 'org-exp)
 
 (defun xml-find-nodes-matching (node name)
   "Returns all children of `node' that have an `xml-node-name' equal to `name'."
@@ -40,17 +41,40 @@
       (append-to-file (point-min) (point-max) org-ikiwiki-output-file))))
 
 (defun org-ikiwiki-hook (&rest params)
-  (apply 'xml-rpc-method-call-stdout 'hook params))
+  (apply 'xml-rpc-method-call-stdout 'hook (butlast params))
+  (funcall (car (last params))))
 
-(defun org-ikiwiki-setstate (page id key value)
-  (xml-rpc-method-call-stdout 'setstate page id key value))
+(defun org-ikiwiki-setstate (page id key value get-response-fn)
+  (xml-rpc-method-call-stdout 'setstate page id key value)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-getstate (page id key get-response-fn)
+  (xml-rpc-method-call-stdout 'getstate page id key)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-getvar (hash-name hash-key get-response-fn)
+  (xml-rpc-method-call-stdout 'getvar hash-name hash-key)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-add-link (page text get-response-fn &optional link-type)
+  (if link-type
+      (xml-rpc-method-call-stdout 'add_link page text link-type)
+    (xml-rpc-method-call-stdout 'add_link page text))
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-pagename (file get-response-fn)
+  (xml-rpc-method-call-stdout 'pagename file)
+  (funcall get-response-fn))
+
+(defun org-ikiwiki-bestlink (page link-text get-response-fn)
+  (xml-rpc-method-call-stdout 'bestlink page link-text)
+  (funcall get-response-fn))
 
 (defun org-ikiwiki-import (get-response-fn params)
-  (org-ikiwiki-hook "type" "htmlize" "id" "org" "call" "htmlize")
-  (funcall get-response-fn)
-;  (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify")
-;  (org-ikiwiki-hook "type" "scan" "id" "org" "call" "scan")
-  "1"
+  (org-ikiwiki-hook "type" "htmlize" "id" "org" "call" "htmlize" get-response-fn)
+  (org-ikiwiki-hook "type" "linkify" "id" "org" "call" "linkify" "first" t get-response-fn)
+  (org-ikiwiki-hook "type" "scan" "id" "org" "call" "scan" get-response-fn)
+  1
   )
 
 (defun list->hash (l)
@@ -60,8 +84,88 @@
       (setq l (cddr l)))
     ret))
 
-(defun org-ikiwiki-htmlize (get-response-fn params)
-  (let* ((content (gethash "content" params))
+(defun org-ikiwiki-correct-link (best-link destpage)
+  ;; best-link is always the same -- something like "posts/processing"
+  ;; destpage can change depending on whether the page is being
+  ;; inlined.  It might be something like "index" or "posts/test".  If
+  ;; it's the former, then we need to keep "posts/processing", but if
+  ;; it's the latter, then it needs to be "../processing".  So the
+  ;; strategy is to find the directories in destpage that are prefixes
+  ;; of best-link.  These can be removed from both
+  ;; (non-destructively).  The path that is returned is a number of
+  ;; ".."s that is the number of directories that is different between
+  ;; the new destpage and best-link followed by the new best-link.  So
+  ;; if we had best-link = "foo/bar/baz" and destpage =
+  ;; "foo/bar/quux/test" then we would reset best-link to "baz" and
+  ;; destpage to "quux/test".  We would return "../../baz".
+  (if (string= destpage "index")
+      best-link
+   (let* ((subdirs-match-index 0)
+	  (best-link (concat "/" (replace-regexp-in-string "//" "/" best-link)))
+	  (destpage (concat "/"  (replace-regexp-in-string "//" "/" destpage)))
+	  (best-link-len (length best-link))
+	  (destpage-len (length destpage))
+	  (matching-subdirs-index 0)
+	  (matching-subdirs-index
+	   (progn
+	     (while (and subdirs-match-index (< subdirs-match-index best-link-len) (< subdirs-match-index destpage-len)
+			 (string= (substring best-link 0 subdirs-match-index) (substring destpage 0 subdirs-match-index)))
+	       (setq matching-subdirs-index subdirs-match-index)
+	       (message (int-to-string matching-subdirs-index))
+	       (setq subdirs-match-index (string-match "/" destpage (1+ subdirs-match-index))))
+	     matching-subdirs-index))
+	  (link-prefix "")
+	  (subdirs-match-index matching-subdirs-index)
+	  (link-prefix
+	   (progn
+	     (while (and subdirs-match-index (< subdirs-match-index destpage-len))
+	       (setq subdirs-match-index (string-match "/" destpage (1+ subdirs-match-index)))
+	       (setq link-prefix (concat "../" link-prefix)))
+	     link-prefix)))
+     (concat link-prefix (substring best-link (1+ matching-subdirs-index))))))
+
+(defun org-ikiwiki-linkify (get-response-fn prms)
+  (let* ((params (list->hash prms))
+	 (content (gethash "content" params))
+	 (page (gethash "page" params))
+	 (destpage (gethash "destpage" params))
+	 (page-file-name (org-ikiwiki-getvar "pagesources" page get-response-fn))
+	 (ret (if (not (string-match "\\.org$" page-file-name))
+		  content
+		(with-temp-buffer
+		  (insert content)
+		  (goto-char (point-min))
+		  (while (re-search-forward org-bracket-link-regexp (point-max) t)
+		    (let* ((url-part (match-string-no-properties 1))
+		  	   (text-part (match-string-no-properties 3))
+		  	   (best-link (save-match-data (org-ikiwiki-bestlink page url-part get-response-fn))))
+		      (if best-link
+		  	  ;; internal page
+		  	  (replace-match (concat "[[./" (save-match-data
+							  (org-ikiwiki-correct-link best-link destpage)) "][" (or text-part url-part) "]]") t t)
+		  	;; external page -- put a slash in front if no text part
+		  	;; otherwise, leave the same
+		  	(when (not text-part)
+		  	  (replace-match (concat "\\[[" url-part "]]") t t)))))
+		  (buffer-string)))))
+    ret))
+
+(defun org-ikiwiki-scan (get-response-fn prms)
+  (let* ((params (list->hash prms))
+	 (page (gethash "page" params))
+	 (content (gethash "content" params))
+	 (page-file-name (org-ikiwiki-getvar "pagesources" page get-response-fn)))
+    (when (string-match "\\.org$" page-file-name)
+      (with-temp-buffer
+	(insert content)
+	(goto-char (point-min))
+	(while (re-search-forward org-any-link-re (point-max) t)
+	  (org-ikiwiki-add-link page (match-string 0) get-response-fn "org"))))
+    1))
+
+(defun org-ikiwiki-htmlize (get-response-fn prms)
+  (let* ((params (list->hash prms))
+	 (content (gethash "content" params))
 	 (page (gethash "page" params))
 	 (org-export-html-preamble nil)
 	 (org-export-html-postamble nil)
@@ -78,8 +182,7 @@
 		  (org-export-as-html 3 t nil 'string t))))
 	 (ret-html (cadr org-info))
 	 (title (plist-get (car org-info) :title)))
-    (org-ikiwiki-setstate page "meta" "title" title)
-    (funcall get-response-fn)
+    (org-ikiwiki-setstate page "meta" "title" title get-response-fn)
     ret-html))
 
 (defvar org-ikiwiki-methods 
@@ -152,7 +255,7 @@
 			       (list node)))
 			    (xml-find-nodes-matching (car xml-list) 'value)))
 		   (method (cadr (assoc method-name methods)))
-		   (result (funcall method org-ikiwiki-rpc-xml-get-response (list->hash params)))
+		   (result (funcall method org-ikiwiki-rpc-xml-get-response params))
 		   (m-params (list `(param nil ,(car (xml-rpc-value-to-xml-list result)))))
 		   (m-response `((methodResponse nil
 						 ,(append '(params nil) m-params)))))
