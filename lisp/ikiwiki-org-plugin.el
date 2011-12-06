@@ -163,6 +163,8 @@
 	    (error "Not a methodCall or methodResponse")))))))
     (setq org-ikiwiki-region-start 1
 	  org-ikiwiki-region-end 1)
+    (kill-buffer input-buffer)
+    (kill-buffer output-file)
     (message "done with that file!")))
 
 (provide 'ikiwiki-org-plugin)
