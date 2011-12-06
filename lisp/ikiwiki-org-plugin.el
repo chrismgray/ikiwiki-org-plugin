@@ -91,11 +91,9 @@
     (when (string-match "\\.org$" page-file-name)
       (with-temp-buffer
 	(insert content)
-	(org-mode)
 	(goto-char (point-min))
 	(while (re-search-forward org-any-link-re (point-max) t)
-	  (org-ikiwiki-add-link page (match-string 0) get-response-fn '(("org" . 1)))
-	  (goto-char (match-end 0)))))
+	  (org-ikiwiki-add-link page (match-string 0) get-response-fn "org"))))
     1))
 
 (defun org-ikiwiki-htmlize (get-response-fn prms)
