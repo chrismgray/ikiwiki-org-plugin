@@ -20,7 +20,7 @@
     (while (not (re-search-forward "\\(</\\(methodResponse\\|methodCall\\)>\\)" (point-max) t))
       (revert-buffer t t)
       (narrow-to-region org-ikiwiki-region-start (point-max))
-      (sleep-for 0.3)
+      (sleep-for 0.1)
       (when (not (file-exists-p (buffer-file-name)))
 	(throw 'org-ikiwiki-input-file-gone nil)))
     (setq org-ikiwiki-region-end (match-end 0))))
