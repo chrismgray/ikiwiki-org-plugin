@@ -35,4 +35,11 @@
     CLOCK: [2011-12-03 Sat 08:52]--[2011-12-03 Sat 09:50] =>  0:58
     :END:
 *** TODO Allow proper customization
-*** TODO Test pictures hosted locally
+*** DONE Test pictures hosted locally
+    CLOSED: [2011-12-15 Thu 11:03]
+    :LOGBOOK:
+    - State "DONE"       from "STARTED"    [2011-12-15 Thu 11:03]
+    - State "STARTED"    from "TODO"       [2011-12-15 Thu 10:47]
+    CLOCK: [2011-12-15 Thu 10:47]--[2011-12-15 Thu 11:03] =>  0:16
+    :END:
+*** TODO Allow for slashes before wikilinks

@@ -138,11 +138,13 @@
 		  (while (re-search-forward org-bracket-link-regexp (point-max) t)
 		    (let* ((url-part (match-string-no-properties 1))
 		  	   (text-part (match-string-no-properties 3))
-		  	   (best-link (save-match-data (org-ikiwiki-bestlink page url-part get-response-fn))))
+		  	   (best-link (save-match-data (org-ikiwiki-bestlink page url-part get-response-fn)))
+			   (image? (save-match-data (string-match (org-image-file-name-regexp) url-part))))
 		      (if best-link
 		  	  ;; internal page
-		  	  (replace-match (concat "[[./" (save-match-data
-							  (org-ikiwiki-correct-link best-link destpage)) "][" (or text-part url-part) "]]") t t)
+			  (let* ((corrected-link (save-match-data
+						   (org-ikiwiki-correct-link best-link destpage))))
+			   (replace-match (concat "[[./" corrected-link "][" (or (when image? corrected-link) text-part url-part) "]]") t t))
 		  	;; external page -- put a slash in front if no text part
 		  	;; otherwise, leave the same
 		  	(when (not text-part)
