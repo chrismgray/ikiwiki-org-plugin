@@ -15,7 +15,15 @@
     - State "DONE"       from "TODO"       [2011-12-03 Sat 08:52]
     :END:
 **** Possibly sleep for a short amount of time.
-*** TODO Figure out why it doesn't work from a daemonized emacs
+*** DONE Figure out why it doesn't work from a daemonized emacs
+    CLOSED: [2011-12-14 Wed 21:44]
+    :LOGBOOK:
+    - State "DONE"       from "STARTED"    [2011-12-14 Wed 21:44]
+    CLOCK: [2011-12-14 Wed 19:02]--[2011-12-14 Wed 19:15] =>  0:13
+    CLOCK: [2011-12-14 Wed 18:34]--[2011-12-14 Wed 18:35] =>  0:01
+    - State "STARTED"    from "TODO"       [2011-12-14 Wed 18:17]
+    CLOCK: [2011-12-14 Wed 18:17]--[2011-12-14 Wed 18:34] =>  0:17
+    :END:
 *** DONE Write scan and linkify procedures
     CLOSED: [2011-12-06 Tue 14:38]
     :LOGBOOK:

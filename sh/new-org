@@ -4,7 +4,8 @@ inputfile=$(tempfile)
 outputfile=$(tempfile)
 
 watch() {
-    tail --follow=name $outputfile
+#    tail --follow=name $outputfile > /dev/stderr &
+    tail --follow=name $outputfile 2> /dev/null
 }
 
 cleanup() {
@@ -14,9 +15,20 @@ cleanup() {
 
 trap cleanup SIGHUP SIGINT EXIT
 
-watch &
+check-emacs() {
+    # check if the daemon is running with a simple math problem
+    emacsclient -s "org-ikiwiki-compiler" --eval "(+ 1 1)"
+    # if it isn't then start a new one
+    if [ $? -ne 0 ]; then
+	emacs --daemon --eval "(progn (require 'ikiwiki-org-plugin) (setq server-name \"org-ikiwiki-compiler\") (server-start))"
+    fi
+}
+
 IFS=
-emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$inputfile\" \"$outputfile\")" -a "emacs --daemon --eval \"(progn (setq server-name \\"org-ikiwiki-compiler\\") (server-start) (org-ikiwiki-compile \\"$inputfile\\" \\"$outputfile\\"))\"" &
+watch &
+check-emacs
+emacsclient -s "org-ikiwiki-compiler" --eval "(org-ikiwiki-compile \"$inputfile\" \"$outputfile\")" &
 while read -r line; do
     echo -E "$line" >> $inputfile
+#    echo -E "$line" > /dev/stderr
 done
