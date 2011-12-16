@@ -43,3 +43,21 @@
     CLOCK: [2011-12-15 Thu 10:47]--[2011-12-15 Thu 11:03] =>  0:16
     :END:
 *** TODO Allow for slashes before wikilinks
+** readme
+*** DONE Remove warnings about alpha state
+    CLOSED: [2011-12-16 Fri 11:22]
+    :LOGBOOK:
+    - State "DONE"       from "STARTED"    [2011-12-16 Fri 11:22]
+    - State "STARTED"    from "TODO"       [2011-12-16 Fri 11:11]
+    CLOCK: [2011-12-16 Fri 11:11]--[2011-12-16 Fri 11:22] =>  0:11
+    :END:
+*** DONE Put in link to blog
+    CLOSED: [2011-12-16 Fri 11:19]
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2011-12-16 Fri 11:19]
+    :END:
+*** DONE Reword installation to reflect sh is now working
+    CLOSED: [2011-12-16 Fri 11:20]
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2011-12-16 Fri 11:20]
+    :END:
