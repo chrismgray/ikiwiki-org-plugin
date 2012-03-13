@@ -8,13 +8,15 @@ use File::Temp qw/ tempfile unlink0 /;
 
 my $org_file_regexp = /\.org$/;
 
-sub run_func_in_emacs($$) {
+sub run_func_in_emacs($$;$) {
     my $func = shift;
     my $content = shift;
+    my $args = shift;
     my ($tf1, $tn1) = tempfile(); # Perl output, emacs input
     my ($tf2, $tn2) = tempfile(); # Perl input, emacs output
-    my ($tf3, $tn3) = tempfile(); # Signal file
+    my ($tf3, $tn3) = tempfile(); # Signal/args file
     print $tf1, $content;
+    print $tf3, $args;
     system("emacs -s org-ikiwiki-compiler --eval \"(ikiwiki-org-$func $tn1 $tn2 $tn3)\"");
     # Wait for emacs to finish
     while (-e $tn3) {
@@ -24,6 +26,7 @@ sub run_func_in_emacs($$) {
     # After debugging
     # unlink0($tf1, $tn1);
     # unlink0($tf2, $tn2);
+    # unlink0($tf3, $tn3);
     return $ret;
 }
 
@@ -36,7 +39,7 @@ sub import {
 	    return
 	}
     }
-    hook(type => "htmlize", id => "org", call => \&htmlize);
+    hook(type => "htmlize", id => "org", call => \&htmlize, first => 1);
     hook(type => "linkify", id => "org", call => \&linkify, first => 1);
     hook(type => "scan", id => "org", call => \&scan);
 }
@@ -45,7 +48,7 @@ sub linkify(@) {
     my %params = @_;
     my $page_file_name = $pagesources{$params{page}};
     if ($page_file_name =~ $org_file_regexp) {
-	return $params{content} = run_func_in_emacs("linkify", $params{content});
+	return $params{content} = run_func_in_emacs("linkify", $params{content}, $params{destpage});
     }
     return $params{content}
 }
