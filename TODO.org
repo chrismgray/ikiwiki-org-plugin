@@ -8,6 +8,12 @@
     :END:
 **** Is it because ikiwiki is not cleaning up stdout when exiting?
       
+** perl
+*** TODO Figure out =system= workaround
+    - The only args that could cause problems are already existing
+      file names (because only things that are returned by =bestlink=
+      are put in the hash).  Thus, if ikiwiki does sanity checking of
+      filenames, we are already ok.
 ** lisp
 *** DONE Use less CPU when waiting on a file
     CLOSED: [2011-12-03 Sat 08:52]

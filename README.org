@@ -30,7 +30,7 @@
    
 * Installation
 
-  There are two main files: =perl/new_org= and
+  There are two main files: =perl/new_org.pm= and
   =lisp/ikiwiki-org-plugin.el=.  The first needs to go in the
   =~/.ikiwiki/IkiWiki/Plugin= directory and the second needs to go somewhere
   in the emacs =load-path=.  However, it is not recommended that you
