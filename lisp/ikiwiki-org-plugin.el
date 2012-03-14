@@ -28,7 +28,6 @@
 	     (while (and subdirs-match-index (< subdirs-match-index best-link-len) (< subdirs-match-index destpage-len)
 			 (string= (substring best-link 0 subdirs-match-index) (substring destpage 0 subdirs-match-index)))
 	       (setq matching-subdirs-index subdirs-match-index)
-	       (message (int-to-string matching-subdirs-index))
 	       (setq subdirs-match-index (string-match "/" destpage (1+ subdirs-match-index))))
 	     matching-subdirs-index))
 	  (link-prefix "")
@@ -41,49 +40,57 @@
 	     link-prefix)))
      (concat link-prefix (substring best-link (1+ matching-subdirs-index))))))
 
-(defun ikiwiki-org-linkify (infile outfile sentinel-file)
-  (find-file outfile)
-  (with-current-buffer outfile
+(defun ikiwiki-org-linkify (infile outfile destpage link-hash)
+  (with-temp-buffer
     (insert-file-contents infile)
-    (let ((destpage (with-temp-buffer
-		      (insert-file-contents sentinel-file)
-		      (buffer-string))))
-     (goto-char (point-min))
-     (while (re-search-forward org-bracket-link-regexp (point-max) t)
-       (let* ((url-part (match-string-no-properties 1))
-	      (text-part (match-string-no-properties 3))
-	      (best-link (save-match-data (ikiwiki-org-bestlink page url-part get-response-fn)))
-	      (image? (save-match-data (string-match (org-image-file-name-regexp) url-part))))
-	 (if best-link
-	     ;; internal page
-	     (let* ((corrected-link (save-match-data
-				      (ikiwiki-org-correct-link best-link destpage))))
-	       (replace-match (concat "[[./" corrected-link "][" (or (when image? corrected-link) text-part url-part) "]]") t t))
-	   ;; external page -- put a slash in front if no text part
-	   ;; otherwise, leave the same
-	   (when (not text-part)
-	     (replace-match (concat "\\[[" url-part "]]") t t))))))
-    (save-buffer))
-  (kill-buffer outfile)
-  (delete-file sentinel-file))
+    (goto-char (point-min))
+    (while (re-search-forward org-bracket-link-regexp (point-max) t)
+      (let* ((url-part (match-string-no-properties 1))
+	     (text-part (match-string-no-properties 3))
+	     (best-link (gethash url-part link-hash))
+	     (image? (save-match-data (string-match (org-image-file-name-regexp) url-part))))
+	(message url-part)
+	(when best-link (message best-link))
+	(if best-link
+	    ;; internal page
+	    (let* ((corrected-link (save-match-data
+				     (ikiwiki-org-correct-link best-link destpage))))
+	      (replace-match (concat "[[./" corrected-link "][" (or (when image? corrected-link) text-part url-part) "]]") t t))
+	  ;; external page -- put a slash in front if no text part
+	  ;; otherwise, leave the same
+	  (when (not text-part)
+	    (replace-match (concat "\\[[" url-part "]]") t t)))))
+    (append-to-file (point-min) (point-max) outfile)))
 
-(defun ikiwiki-org-scan (infile outfile sentinel-file)
-  (find-file infile)
-  (find-file outfile)
-  (with-current-buffer infile
-   (goto-char (point-min))
-   (while (re-search-forward org-any-link-re (point-max) t)
-     (with-current-buffer outfile
-       (goto-char (point-max))
-       (insert (match-string 0))
-       (insert "\n")))
-   (save-buffer outfile))
-  (kill-buffer outfile)
-  (kill-buffer infile)
-  (delete-file sentinel-file))
+(defun ikiwiki-org-scan (infile outfile)
+  (with-temp-buffer
+    (insert-file-contents infile)
+    (org-mode)
+    (let ((org-info (org-infile-export-plist)))
+      (when (plist-get org-info :title)
+	(save-excursion
+	  (with-temp-buffer
+	   (insert "#+TITLE: ")
+	   (insert (plist-get org-info :title))
+	   (insert "\n")
+	   (append-to-file (point-min) (point-max) outfile))))
+      (when (plist-get org-info :author)
+	(save-excursion
+	  (with-temp-buffer
+	    (insert "#+AUTHOR: ")
+	    (insert (plist-get org-info :author))
+	    (insert "\n")
+	    (append-to-file (point-min) (point-max) outfile)))))
+    (goto-char (point-min))
+    (while (re-search-forward org-bracket-link-regexp (point-max) t)
+      (let ((url (match-string-no-properties 1)))
+       (save-excursion
+	 (with-temp-buffer
+	   (insert url)
+	   (insert "\n")
+	   (append-to-file (point-min) (point-max) outfile)))))))
 
-(defun ikiwiki-org-htmlize (infile outfile sentinel-file)
-  (find-file outfile)
+(defun ikiwiki-org-htmlize (infile outfile)
   (let* ((org-export-html-preamble nil)
 	 (org-export-html-postamble nil)
 	 (org-export-with-sub-superscripts nil)
@@ -99,12 +106,9 @@
 		  (org-export-as-html 3 t nil 'string t))))
 	 (ret-html (cadr org-info))
 	 (title (plist-get (car org-info) :title)))
-    (with-current-buffer outfile
-      (insert (concat "[[!meta title=\"" title "\"]]\n"))
+    (with-temp-buffer
       (insert ret-html)
-      (save-buffer))
-    (kill-buffer outfile)
-    (delete-file sentinel-file)))
+      (append-to-file (point-min) (point-max) outfile))))
 
 (provide 'ikiwiki-org-plugin)
 
