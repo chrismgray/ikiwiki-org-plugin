@@ -30,16 +30,16 @@
    
 * Installation
 
-  There are two main files: =sh/new-org= and
+  There are two main files: =perl/new_org= and
   =lisp/ikiwiki-org-plugin.el=.  The first needs to go in the
-  =~/.ikiwiki/plugins= directory and the second needs to go somewhere
+  =~/.ikiwiki/IkiWiki/Plugin= directory and the second needs to go somewhere
   in the emacs =load-path=.  However, it is not recommended that you
   =require= the =ikiwiki-org-plugin= file from your usually-running
   emacs -- a new emacs instance is started by the plugin which will
   =require= it for you.
 
   The plugin must be enabled in your =wiki.setup= or =blog.setup=
-  file.  This is done by adding =new-org= to the =add_plugins= list.
+  file.  This is done by adding =new_org= to the =add_plugins= list.
 
 * License
 
