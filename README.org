@@ -40,9 +40,19 @@
 
   The plugin must be enabled in your =wiki.setup= or =blog.setup=
   file.  This is done by adding =new_org= to the =add_plugins= list.
+  
+* Security Warning
+
+  This plugin uses =system= to communicate with emacs.  Every effort
+  has been made to ensure that the arguments to this function can not
+  cause damage, but it is possible that I have missed something.
+  Given this, the plugin should not be used in situations where
+  malicious input is possible.
+
+  Ideas for how to avoid this problem would be highly appreciated.
 
 * License
 
-  Copyright (C) 2011, Chris Gray.
+  Copyright (C) 2011-2012, Chris Gray.
 
   Distributed under the GPL, version 2 or (at your discretion) higher.
