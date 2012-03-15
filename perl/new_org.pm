@@ -14,6 +14,8 @@ sub run_func_in_emacs($$;$) {
     my $args = shift;
     my ($tf1, $tn1) = tempfile("/tmp/ikiwiki-org-1-XXXXX"); # Perl output, emacs input
     my ($tf2, $tn2) = tempfile("/tmp/ikiwiki-org-2-XXXXX"); # Perl input, emacs output
+    binmode($tf1, ":utf8");
+    binmode($tf2, ":utf8");
     print $tf1 $content;
     if (!defined $args) { $args = ""; }
     # WARNING: possible security hole
