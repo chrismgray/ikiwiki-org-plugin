@@ -30,7 +30,7 @@ sub run_func_in_emacs($$;$) {
 }
 
 sub import {
-    system("emacsclient -s org-ikiwiki-compiler --eval \"(+ 1 1)\"");
+    system("emacsclient -s org-ikiwiki-compiler --eval nil");
     if ($? != 0) {
 	system("emacs --daemon --eval \"(progn (require 'ikiwiki-org-plugin) (setq server-name \\\"org-ikiwiki-compiler\\\") (server-start))\"");
 	if ($? != 0) {
