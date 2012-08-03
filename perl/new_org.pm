@@ -20,7 +20,7 @@ sub run_func_in_emacs($$;$) {
     if (!defined $args) { $args = ""; }
     # WARNING: possible security hole
     $args =~ s/'/'\\''/g;
-    my $argstring = qq/emacsclient -s org-ikiwiki-compiler --eval '(ikiwiki-org-$func "$tn1" "$tn2" $args)'/;
+    my $argstring = qq/unset ALTERNATE_EDITOR; emacsclient -s org-ikiwiki-compiler --eval '(ikiwiki-org-$func "$tn1" "$tn2" $args)'/;
     system($argstring);
     # Wait for emacs to finish
     my @ret = <$tf2>;
@@ -30,7 +30,7 @@ sub run_func_in_emacs($$;$) {
 }
 
 sub import {
-    system("emacsclient -s org-ikiwiki-compiler --eval nil");
+    system("unset ALTERNATE_EDITOR; emacsclient -s org-ikiwiki-compiler --eval nil");
     if ($? != 0) {
 	system("emacs --daemon --eval \"(progn (require 'ikiwiki-org-plugin) (setq server-name \\\"org-ikiwiki-compiler\\\") (server-start))\"");
 	if ($? != 0) {
