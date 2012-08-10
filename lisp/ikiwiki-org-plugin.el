@@ -40,12 +40,19 @@
 	     link-prefix)))
      (concat link-prefix (substring best-link (1+ matching-subdirs-index))))))
 
+(defun ikiwiki-org-remove-link-prefix (url-part)
+  "Removes `file:' or `./' prefixes from Org links."
+  (save-match-data
+    (cond ((string-match "\\(^file:\\|\\./\\)" url-part) (replace-match "" nil nil url-part))
+	  (url-part))))
+
+
 (defun ikiwiki-org-linkify (infile outfile destpage link-hash)
   (with-temp-buffer
     (insert-file-contents infile)
     (goto-char (point-min))
     (while (re-search-forward org-bracket-link-regexp (point-max) t)
-      (let* ((url-part (match-string-no-properties 1))
+      (let* ((url-part (ikiwiki-org-remove-link-prefix (match-string-no-properties 1)))
 	     (text-part (match-string-no-properties 3))
 	     (best-link (gethash url-part link-hash))
 	     (image? (save-match-data (string-match (org-image-file-name-regexp) url-part))))
@@ -83,7 +90,7 @@
 	    (append-to-file (point-min) (point-max) outfile)))))
     (goto-char (point-min))
     (while (re-search-forward org-bracket-link-regexp (point-max) t)
-      (let ((url (match-string-no-properties 1)))
+      (let ((url (ikiwiki-org-remove-link-prefix (match-string-no-properties 1))))
        (save-excursion
 	 (with-temp-buffer
 	   (insert url)
