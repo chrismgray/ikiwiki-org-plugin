@@ -5,6 +5,7 @@ use warnings;
 use strict;
 use IkiWiki 3.00;
 use File::Temp qw/ tempfile unlink0 /;
+use IPC::Open2;
 
 my $org_file_regexp = qr/\.org$/;
 
@@ -21,8 +22,9 @@ sub run_func_in_emacs($$;$) {
     # WARNING: possible security hole
     $args =~ s/'/'\\''/g;
     my $argstring = qq/unset ALTERNATE_EDITOR; emacsclient -s org-ikiwiki-compiler --eval '(ikiwiki-org-$func "$tn1" "$tn2" $args)'/;
-    system($argstring);
+    my $pid = open2(*IN, *OUT, $argstring);
     # Wait for emacs to finish
+    waitpid($pid, 0);
     my @ret = <$tf2>;
     unlink0($tf1, $tn1);
     unlink0($tf2, $tn2);
@@ -30,9 +32,11 @@ sub run_func_in_emacs($$;$) {
 }
 
 sub import {
-    system("unset ALTERNATE_EDITOR; emacsclient -s org-ikiwiki-compiler --eval nil");
+    my $pid = open2(*IN, *OUT, "unset ALTERNATE_EDITOR; emacsclient -s org-ikiwiki-compiler --eval nil");
+    waitpid($pid, 0);
     if ($? != 0) {
-	system("emacs --daemon --eval \"(progn (require 'ikiwiki-org-plugin) (setq server-name \\\"org-ikiwiki-compiler\\\") (server-start))\"");
+	$pid = open2(*IN, *OUT, "emacs --daemon --eval \"(progn (require 'ikiwiki-org-plugin) (setq server-name \\\"org-ikiwiki-compiler\\\") (server-start))\"");
+    waitpid($pid, 0);
 	if ($? != 0) {
 	    print STDERR "Failed to start emacs. Will not continue with new_org setup.\n";
 	    return;
