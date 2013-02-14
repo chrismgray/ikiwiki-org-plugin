@@ -43,7 +43,7 @@
   
 * Security Warning
 
-  This plugin uses =system= to communicate with emacs.  Every effort
+  This plugin uses =IPC::open2= to communicate with emacs.  Every effort
   has been made to ensure that the arguments to this function can not
   cause damage, but it is possible that I have missed something.
   Given this, the plugin should not be used in situations where
