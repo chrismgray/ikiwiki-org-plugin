@@ -56,8 +56,8 @@
 	     (text-part (match-string-no-properties 3))
 	     (best-link (gethash url-part link-hash))
 	     (image? (save-match-data (string-match (org-image-file-name-regexp) url-part))))
-	(message url-part)
-	(when best-link (message best-link))
+	(message "%s" url-part)
+	(when best-link (message "%s" best-link))
 	(if best-link
 	    ;; internal page
 	    (let* ((corrected-link (save-match-data
