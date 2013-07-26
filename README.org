@@ -51,6 +51,31 @@
 
   Ideas for how to avoid this problem would be highly appreciated.
 
+* Debugging
+
+If you experience problems with this plugin, the commands mentioned
+below can help you to debug them.
+
+You may start with asking ikiwiki to render a single page and print
+the result to standard output:
+
+  : ikiwiki --setup <file.setup> --render <file.org>
+
+You may want to debug the lisp code interactively while running the
+above command. In order to do that, run
+
+  : emacsclient -s org-ikiwiki-compiler <some_file>
+
+This connects you to the emacs process that performs the actual
+processing. There you can watch messages in the *Messages* buffer or
+interactively debug lisp function (press C-u C-M-x).
+  
+If the above commands are not enough, you can even invoke individual
+hooks from the command line. The command below runs =htmlize()= hook
+on =file.org= and prints the result.
+
+  : perl -e 'use new_org; print(IkiWiki::Plugin::new_org::htmlize((content => do { local $/; <>})));' file.org
+
 * License
 
   Copyright (C) 2011-2012, Chris Gray.
