@@ -93,9 +93,10 @@
       (let ((url (ikiwiki-org-remove-link-prefix (match-string-no-properties 1))))
        (save-excursion
 	 (with-temp-buffer
-	   (insert url)
-	   (insert "\n")
-	   (append-to-file (point-min) (point-max) outfile)))))))
+           (let ((buffer-file-coding-system 'utf-8))
+	     (insert url)
+	     (insert "\n")
+	     (append-to-file (point-min) (point-max) outfile))))))))
 
 (defun ikiwiki-org-htmlize (infile outfile)
   (let* ((org-export-html-preamble nil)
@@ -114,8 +115,9 @@
 	 (ret-html (cadr org-info))
 	 (title (plist-get (car org-info) :title)))
     (with-temp-buffer
-      (insert ret-html)
-      (append-to-file (point-min) (point-max) outfile))))
+      (let ((buffer-file-coding-system 'utf-8))
+	(insert ret-html)
+	(append-to-file (point-min) (point-max) outfile)))))
 
 (provide 'ikiwiki-org-plugin)
 
