@@ -56,8 +56,6 @@
 	     (text-part (match-string-no-properties 3))
 	     (best-link (gethash url-part link-hash))
 	     (image? (save-match-data (string-match (org-image-file-name-regexp) url-part))))
-	(message "%s" url-part)
-	(when best-link (message "%s" best-link))
 	(if best-link
 	    ;; internal page
 	    (let* ((corrected-link (save-match-data
@@ -98,26 +96,24 @@
 	     (insert "\n")
 	     (append-to-file (point-min) (point-max) outfile))))))))
 
+(defun ikiwiki-org-htmlize-strings (input)
+  "Given a string containing an org file, returns a string containing the HTML"
+  (save-excursion
+    (with-temp-buffer
+      (insert input)
+      (org-export-to-buffer
+	  'html (current-buffer) nil nil nil t
+	  '(:html-mathjax t :html-preamble nil :html-postamble nil :with-toc nil))
+      (buffer-string))))
+
 (defun ikiwiki-org-htmlize (infile outfile)
-  (let* ((org-export-html-preamble nil)
-	 (org-export-html-postamble nil)
-	 (org-export-with-sub-superscripts nil)
-	 (org-export-with-TeX-macros nil) ; let mathjax take care of it
-	 (org-export-with-LaTeX-fragments 'mathjax)
-	 (org-export-babel-evaluate nil)
-	 (org-export-with-toc nil)
-	 (org-info
-	  (with-temp-buffer
-	    (insert-file-contents infile)
-	    (org-mode)
-	    (list (org-infile-export-plist)
-		  (org-export-as-html 3 t nil 'string t))))
-	 (ret-html (cadr org-info))
-	 (title (plist-get (car org-info) :title)))
+  (let* ((ret-html (ikiwiki-org-htmlize-strings
+		    (with-temp-buffer
+		      (insert-file-contents infile)
+		      (buffer-string)))))
     (with-temp-buffer
       (let ((buffer-file-coding-system 'utf-8))
 	(insert ret-html)
 	(append-to-file (point-min) (point-max) outfile)))))
 
 (provide 'ikiwiki-org-plugin)
-
