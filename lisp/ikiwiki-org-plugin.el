@@ -1,5 +1,5 @@
 
-(require 'org-exp)
+(require 'ox)
 
 (defun ikiwiki-org-correct-link (best-link destpage)
   ;; best-link is always the same -- something like "posts/processing"
