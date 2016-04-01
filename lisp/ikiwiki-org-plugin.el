@@ -71,7 +71,13 @@
   (with-temp-buffer
     (insert-file-contents infile)
     (org-mode)
-    (let ((org-info (org-infile-export-plist)))
+    (let ((org-info
+                     ;; In org 8 org-infile-export-plist has been replaced by
+                     ;; org-export-get-enviroment
+                     (if (version-list-< (version-to-list (org-version)) '(8 0 0))
+                         (org-infile-export-plist)
+		         (org-export-get-environment))
+	 ))
       (when (plist-get org-info :title)
 	(save-excursion
 	  (with-temp-buffer
